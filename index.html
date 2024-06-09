@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>test</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
+            font-family: Arial, sans-serif;
+        }
+        #start-screen, #game-container, #break-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(4, 50px);
+            grid-template-rows: repeat(6, 50px);
+            gap: 15px;
+            margin-top: 30px;
+        }
+        .icon {
+            width: 50px;
+            height: 50px;
+            background-size: cover;
+            cursor: pointer;
+        }
+        #instruction, #result {
+            margin: 10px;
+            font-size: 16px;
+            color: #333;
+        }
+        #break-screen {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="start-screen">
+        <button id="start-button">ゲーム開始</button>
+    </div>
+    <div id="game-container" style="display: none;">
+        <p id="instruction"></p>
+        <div id="grid"></div>
+        <p id="result"></p>
+    </div>
+    <div id="break-screen">
+        <p>休憩時間です。準備ができたら「続ける」を押してください。</p>
+        <button id="continue-button">続ける</button>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const END_POINT = 'https://script.google.com/macros/s/AKfycbxNPQVHbFdCRZXFiyf3DHlnTrrHzJsjv0r9IWWlRDcYh9XBiUpKpXxpcW1n4AowKN8g/exec'; // WebアプリのURLを設定
+            const SHEET_NO = 1;
+            const startButton = document.getElementById('start-button');
+            const continueButton = document.getElementById('continue-button');
+            const startScreen = document.getElementById('start-screen');
+            const gameContainer = document.getElementById('game-container');
+            const breakScreen = document.getElementById('break-screen');
+            const grid = document.getElementById('grid');
+            const result = document.getElementById('result');
+            const instruction = document.getElementById('instruction');
+            let trialCount = 0;
+            let currentIconGroupIndex = 0;
+            let startTime, targetIcon, participantId;
+
+            const iconGroups = [
+                [
+                    {name: 'Uniflectのアルバムアプリ', url: 'images/uniflect_album.jpg'},
+                    {name: 'Uniflectの地図アプリ', url: 'images/uniflect_location.jpg'},
+                    {name: 'Uniflectのメールアプリ', url: 'images/uniflect_mail.jpg'},
+                    {name: 'Uniflectのプライバシーアプリ', url: 'images/uniflect_privacy.jpg'},
+                    {name: '電気自転車シェアアプリ', url: 'images/electric_cycle_share_online.jpg'},
+                    {name: 'データ共有・通知設定', url: 'images/security_settei.jpg'},
+                    {name: '自動車オンラインレンタル', url: 'images/car_rental_online.jpg'},
+                    {name: 'ビジネス契約', url: 'images/business_agreement.jpg'}
+                ],
+                [
+                    {name: '教会の保護', url: 'images/ai_church_protection.webp'},
+                    {name: '温かい食べ物のオンラインショッピングアプリ', url: 'images/ai_hotfood_online.webp'},
+                    {name: '電気自転車シェアアプリ', url: 'images/ai_electric_cycle_share_online.webp'},
+                    {name: '無限の象徴', url: 'images/ai_infinity_symbol.webp'},
+                    {name: '自然保護区', url: 'images/ai_nature_reserve.webp'},
+                    {name: 'オンライン教育プラットフォーム', url: 'images/ai_online_education_platform.webp'},
+                    {name: 'オンライン医療', url: 'images/ai_online_medical.webp'},
+                    {name: '時間管理アプリ', url: 'images/ai_time_management.webp'}
+                ]
+            ];
+
+            let shuffledIcons = [];
+            let trialsPerGroup = iconGroups[currentIconGroupIndex].length;
+            const totalTrials = iconGroups.reduce((sum, group) => sum + group.length, 0);
+
+            startButton.addEventListener('click', startGame);
+            continueButton.addEventListener('click', continueGame);
+
+            function generateParticipantId() {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const seconds = String(now.getSeconds()).padStart(2, '0');
+                return `${year}${month}${day}${hours}${minutes}${seconds}`;
+            }
+
+            function startGame() {
+                participantId = generateParticipantId();
+                trialCount = 0;
+                currentIconGroupIndex = 0;
+                trialsPerGroup = iconGroups[currentIconGroupIndex].length;
+                gameContainer.style.display = 'flex';
+                startScreen.style.display = 'none';
+                setupGame();
+            }
+
+            function continueGame() {
+                currentIconGroupIndex++;
+                if (currentIconGroupIndex < iconGroups.length) {
+                    trialsPerGroup = iconGroups[currentIconGroupIndex].length;
+                    breakScreen.style.display = 'none';
+                    gameContainer.style.display = 'flex';
+                    setupGame();
+                }
+            }
+
+            function setupGame() {
+                if (trialCount >= totalTrials) {
+                    gameContainer.style.display = 'none';
+                    alert("試行回数に達しました。ゲーム終了！");
+                    startScreen.style.display = 'flex';
+                    return;
+                }
+
+                const currentIconGroup = iconGroups[currentIconGroupIndex];
+
+                if (trialCount % trialsPerGroup === 0 && trialCount > 0 && currentIconGroupIndex < iconGroups.length - 1) {
+                    gameContainer.style.display = 'none';
+                    breakScreen.style.display = 'flex';
+                    return;
+                }
+
+                if (trialCount % trialsPerGroup === 0) {
+                    shuffledIcons = [...currentIconGroup].sort(() => Math.random() - 0.5);
+                }
+
+                targetIcon = shuffledIcons[trialCount % trialsPerGroup];
+                instruction.textContent = `指定されたアイコン「${targetIcon.name}」を探してクリックしてください。`;
+                startTime = new Date();
+                grid.innerHTML = '';
+
+                const gridIcons = [...currentIconGroup, ...currentIconGroup, ...currentIconGroup].sort(() => Math.random() - 0.5);
+                for (let i = 0; i < 24; i++) {
+                    const icon = document.createElement('div');
+                    icon.className = 'icon';
+                    icon.style.backgroundImage = `url('${gridIcons[i].url}')`;
+                    icon.dataset.iconName = gridIcons[i].name;
+                    icon.addEventListener('click', () => checkAnswer(icon));
+                    grid.appendChild(icon);
+                }
+            }
+
+            function checkAnswer(icon) {
+                const endTime = new Date();
+                const timeTaken = (endTime - startTime) / 1000;
+                const correct = icon.dataset.iconName === targetIcon.name;
+                //result.textContent = correct ? `正解です！時間: ${timeTaken}秒` : `不正解です！時間: ${timeTaken}秒`;
+                const resultData = {
+                    sheetNo: SHEET_NO,
+                    data: [{
+                        participantId: participantId,
+                        trial: trialCount + 1,
+                        targetIcon: targetIcon.name,
+                        iconGroup: currentIconGroupIndex + 1, // どのアイコン群かを記録
+                        correctness: correct ? 'correct' : 'fail',
+                        reactionTime: timeTaken
+                    }]
+                };
+                sendResultToGoogleSheets(resultData);
+                trialCount++;
+                setupGame();
+            }
+
+            function sendResultToGoogleSheets(data) {
+                fetch(END_POINT, {
+                    method: 'POST',
+                    body: JSON.stringify(data),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Success!', data);
+                })
+                .catch(error => console.error('Error!', error.message));
+            }
+        });
+    </script>
+</body>
+</html>
+
+
+            
+  
+
+
+            
+
+
+
+            
+
+
+
+            
+
