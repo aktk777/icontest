@@ -12,40 +12,68 @@
             margin: 0;
             background-color: #f4f4f4;
             font-family: Arial, sans-serif;
+            flex-direction: column;
         }
         #start-screen, #game-container, #break-screen {
             display: flex;
             flex-direction: column;
             align-items: center;
         }
+        #start-screen {
+            justify-content: center;
+            height: 100vh;
+        }
+        #game-container {
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        #break-screen {
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
         #grid {
             display: grid;
-            grid-template-columns: repeat(4, 50px);
-            grid-template-rows: repeat(6, 50px);
+            grid-template-columns: repeat(4, 180px);
+            grid-template-rows: repeat(4, 180px);
             gap: 15px;
             margin-top: 30px;
         }
+        .icon-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
         .icon {
-            width: 50px;
-            height: 50px;
+            width: 64px;
+            height: 64px;
             background-size: cover;
             cursor: pointer;
+        }
+        .icon-label {
+            text-align: center;
+            font-size: 12px;
+            margin-top: 5px;
+            width: 80px;
+            word-wrap: break-word;
         }
         #instruction, #result {
             margin: 10px;
             font-size: 16px;
             color: #333;
         }
-        #break-screen {
-            display: none;
-        }
     </style>
 </head>
 <body>
     <div id="start-screen">
+        <select id="icon-group-order">
+            <option value="0">アイコン群1 → アイコン群2</option>
+            <option value="1">アイコン群2 → アイコン群1</option>
+        </select>
         <button id="start-button">ゲーム開始</button>
     </div>
-    <div id="game-container" style="display: none;">
+    <div id="game-container">
         <p id="instruction"></p>
         <div id="grid"></div>
         <p id="result"></p>
@@ -66,35 +94,50 @@
             const grid = document.getElementById('grid');
             const result = document.getElementById('result');
             const instruction = document.getElementById('instruction');
+            const iconGroupOrder = document.getElementById('icon-group-order');
             let trialCount = 0;
             let currentIconGroupIndex = 0;
-            let startTime, targetIcon, participantId;
+            let startTime, targetIcon, participantId, order;
 
             const iconGroups = [
                 [
-                    {name: 'Uniflectのアルバムアプリ', url: 'images/uniflect_album.jpg'},
-                    {name: 'Uniflectの地図アプリ', url: 'images/uniflect_location.jpg'},
-                    {name: 'Uniflectのメールアプリ', url: 'images/uniflect_mail.jpg'},
-                    {name: 'Uniflectのプライバシーアプリ', url: 'images/uniflect_privacy.jpg'},
+                    {name: 'Uniflect（社名）のアルバムアプリ', url: 'images/uniflect_album.jpg'},
+                    {name: 'Uniflect（社名）の地図アプリ', url: 'images/uniflect_location.jpg'},
+                    {name: 'Uniflect（社名）のメールアプリ', url: 'images/uniflect_mail.jpg'},
+                    {name: 'Uniflect（社名）のプライバシーアプリ', url: 'images/uniflect_privacy.jpg'},
                     {name: '電気自転車シェアアプリ', url: 'images/electric_cycle_share_online.jpg'},
                     {name: 'データ共有・通知設定', url: 'images/security_settei.jpg'},
                     {name: '自動車オンラインレンタル', url: 'images/car_rental_online.jpg'},
-                    {name: 'ビジネス契約', url: 'images/business_agreement.jpg'}
+                    {name: 'ビジネス契約', url: 'images/business_agreement.jpg'},
+                    {name: '教会の保護', url: 'images/church_protection.jpg'},
+                    {name: '新しいファイルを作成', url: 'images/create_new_file.jpg'},
+                    {name: 'ドレスのリサイクル', url: 'images/dress_recycle.jpg'},
+                    {name: '温かい食べ物のオンラインショッピング', url: 'images/hot_food_online.jpg'},
+                    {name: 'ゴリラ禁止', url: 'images/no_gorilla.jpg'},
+                    {name: '個人成績データ', url: 'images/personal_performance.jpg'},
+                    {name: 'スマートカー', url: 'images/smart_car.jpg'},
+                    {name: '速いダウンロード', url: 'images/fast_download.jpg'}
                 ],
                 [
-                    {name: '教会の保護', url: 'images/ai_church_protection.webp'},
-                    {name: '温かい食べ物のオンラインショッピングアプリ', url: 'images/ai_hotfood_online.webp'},
+                    {name: 'Uniflect（社名）のアルバムアプリ', url: 'images/ai_uniflect_alubum.webp'},
+                    {name: 'Uniflect（社名）の地図アプリ', url: 'images/ai_uniflect_map.webp'},
+                    {name: 'Uniflect（社名）のメールアプリ', url: 'images/ai_uniflect_mail.webp'},
+                    {name: 'Uniflect（社名）のプライバシーアプリ', url: 'images/ai_uniflect_privacy.webp'},
                     {name: '電気自転車シェアアプリ', url: 'images/ai_electric_cycle_share_online.webp'},
-                    {name: '無限の象徴', url: 'images/ai_infinity_symbol.webp'},
-                    {name: '自然保護区', url: 'images/ai_nature_reserve.webp'},
-                    {name: 'オンライン教育プラットフォーム', url: 'images/ai_online_education_platform.webp'},
-                    {name: 'オンライン医療', url: 'images/ai_online_medical.webp'},
-                    {name: '時間管理アプリ', url: 'images/ai_time_management.webp'}
+                    {name: 'データ共有・通知設定', url: 'images/ai_security_settei.webp'},
+                    {name: '自動車オンラインレンタル', url: 'images/ai_online_car_rental.webp'},
+                    {name: 'ビジネス契約', url: 'images/ai_bussiness_agreement.webp'},
+                    {name: '教会の保護', url: 'images/ai_church_protection.webp'},
+                    {name: '新しいファイルを作成', url: 'images/ai_create_new_file.webp'},
+                    {name: 'ドレスのリサイクル', url: 'images/ai_dress_recycle.webp'},
+                    {name: '温かい食べ物のオンラインショッピング', url: 'images/ai_hotfood_online.webp'},
+                    {name: 'ゴリラ禁止', url: 'images/ai_no_gorilla.webp'},
+                    {name: '個人成績データ', url: 'images/ai_personal_performance.webp'},
+                    {name: 'スマートカー', url: 'images/ai_smart_car.webp'},
+                    {name: '速いダウンロード', url: 'images/ai_fast_download.webp'}
                 ]
             ];
 
-            let shuffledIcons = [];
-            let trialsPerGroup = iconGroups[currentIconGroupIndex].length;
             const totalTrials = iconGroups.reduce((sum, group) => sum + group.length, 0);
 
             startButton.addEventListener('click', startGame);
@@ -115,19 +158,24 @@
                 participantId = generateParticipantId();
                 trialCount = 0;
                 currentIconGroupIndex = 0;
-                trialsPerGroup = iconGroups[currentIconGroupIndex].length;
                 gameContainer.style.display = 'flex';
                 startScreen.style.display = 'none';
+                order = iconGroupOrder.value;
+                if (order === '1') {
+                    iconGroups.reverse();
+                }
                 setupGame();
             }
 
             function continueGame() {
                 currentIconGroupIndex++;
                 if (currentIconGroupIndex < iconGroups.length) {
-                    trialsPerGroup = iconGroups[currentIconGroupIndex].length;
                     breakScreen.style.display = 'none';
                     gameContainer.style.display = 'flex';
                     setupGame();
+                } else {
+                    alert("試行回数に達しました。ゲーム終了！");
+                    startScreen.style.display = 'flex';
                 }
             }
 
@@ -136,10 +184,15 @@
                     gameContainer.style.display = 'none';
                     alert("試行回数に達しました。ゲーム終了！");
                     startScreen.style.display = 'flex';
+                    order = iconGroupOrder.value;
+                    if (order === '1') {
+                        iconGroups.reverse();
+                    }
                     return;
                 }
 
                 const currentIconGroup = iconGroups[currentIconGroupIndex];
+                const trialsPerGroup = currentIconGroup.length;
 
                 if (trialCount % trialsPerGroup === 0 && trialCount > 0 && currentIconGroupIndex < iconGroups.length - 1) {
                     gameContainer.style.display = 'none';
@@ -156,14 +209,24 @@
                 startTime = new Date();
                 grid.innerHTML = '';
 
-                const gridIcons = [...currentIconGroup, ...currentIconGroup, ...currentIconGroup].sort(() => Math.random() - 0.5);
-                for (let i = 0; i < 24; i++) {
+                const gridIcons = [...currentIconGroup].sort(() => Math.random() - 0.5);
+                for (let i = 0; i < 16; i++) {
+                    const iconWrapper = document.createElement('div');
+                    iconWrapper.className = 'icon-wrapper';
+                    
                     const icon = document.createElement('div');
                     icon.className = 'icon';
-                    icon.style.backgroundImage = `url('${gridIcons[i].url}')`;
-                    icon.dataset.iconName = gridIcons[i].name;
+                    icon.style.backgroundImage = `url('${gridIcons[i % gridIcons.length].url}')`;
+                    icon.dataset.iconName = gridIcons[i % gridIcons.length].name;
                     icon.addEventListener('click', () => checkAnswer(icon));
-                    grid.appendChild(icon);
+
+                    const iconLabel = document.createElement('div');
+                    iconLabel.className = 'icon-label';
+                    iconLabel.textContent = gridIcons[i % gridIcons.length].name;
+
+                    iconWrapper.appendChild(icon);
+                    iconWrapper.appendChild(iconLabel);
+                    grid.appendChild(iconWrapper);
                 }
             }
 
@@ -178,7 +241,7 @@
                         participantId: participantId,
                         trial: trialCount + 1,
                         targetIcon: targetIcon.name,
-                        iconGroup: currentIconGroupIndex + 1, // どのアイコン群かを記録
+                        iconGroup: currentIconGroupIndex + order * 2 + 1, // どのアイコン群かを記録
                         correctness: correct ? 'correct' : 'fail',
                         reactionTime: timeTaken
                     }]
@@ -203,19 +266,3 @@
     </script>
 </body>
 </html>
-
-
-            
-  
-
-
-            
-
-
-
-            
-
-
-
-            
-
