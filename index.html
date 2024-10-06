@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>test</title>
+    <title>Icon Search Task</title>
     <style>
         body {
             display: flex;
@@ -14,12 +14,12 @@
             font-family: Arial, sans-serif;
             flex-direction: column;
         }
-        #start-screen, #game-container, #break-screen {
+        #start-screen, #practice-intro-screen, #game-container, #break-screen, #main-intro-screen {
             display: flex;
             flex-direction: column;
             align-items: center;
         }
-        #start-screen {
+        #start-screen, #practice-intro-screen, #main-intro-screen {
             justify-content: center;
             height: 100vh;
         }
@@ -35,7 +35,7 @@
         }
         #grid {
             display: grid;
-            grid-template-columns: repeat(4, 120px);
+            grid-template-columns: repeat(6, 120px);
             grid-template-rows: repeat(4, 100px);
             gap: 15px;
             margin-top: 20px;
@@ -48,7 +48,8 @@
         .icon {
             width: 32px;
             height: 32px;
-            background-size: cover;
+            background-size: contain;
+            background-repeat: no-repeat;
             cursor: pointer;
         }
         .icon-label {
@@ -73,6 +74,14 @@
         </select>
         <button id="start-button">ゲーム開始</button>
     </div>
+    <div id="practice-intro-screen" style="display: none;">
+        <p>これから練習試行を行います。準備ができたら「練習開始」を押してください。</p>
+        <button id="start-practice-button">練習開始</button>
+    </div>
+    <div id="main-intro-screen" style="display: none;">
+        <p>これから本番を行います。準備ができたら「本番開始」を押してください。</p>
+        <button id="start-main-button">本番開始</button>
+    </div>
     <div id="game-container">
         <p id="instruction"></p>
         <div id="grid"></div>
@@ -87,8 +96,12 @@
             const END_POINT = 'https://script.google.com/macros/s/AKfycbxNPQVHbFdCRZXFiyf3DHlnTrrHzJsjv0r9IWWlRDcYh9XBiUpKpXxpcW1n4AowKN8g/exec'; // WebアプリのURLを設定
             const SHEET_NO = 1;
             const startButton = document.getElementById('start-button');
+            const startPracticeButton = document.getElementById('start-practice-button');
+            const startMainButton = document.getElementById('start-main-button');
             const continueButton = document.getElementById('continue-button');
             const startScreen = document.getElementById('start-screen');
+            const practiceIntroScreen = document.getElementById('practice-intro-screen');
+            const mainIntroScreen = document.getElementById('main-intro-screen');
             const gameContainer = document.getElementById('game-container');
             const breakScreen = document.getElementById('break-screen');
             const grid = document.getElementById('grid');
@@ -96,9 +109,12 @@
             const instruction = document.getElementById('instruction');
             const iconGroupOrder = document.getElementById('icon-group-order');
             let trialCount = 0;
+            let trialCountInGroup = 0;
             let currentIconGroupIndex = 0;
             let startTime, targetIcon, participantId, order;
-
+            let practiceMode = true;
+            const practiceTrialsPerGroup = 24;
+            let practiceTrialsInGroup = 0;
             const iconGroups = [
                 [
                     {name: 'Uniflect Album App', url: 'images/uniflect_album.jpg'},
@@ -116,8 +132,15 @@
                     {name: 'No Gorilla', url: 'images/no_gorilla.jpg'},
                     {name: 'Personal Performance Data', url: 'images/personal_performance.jpg'},
                     {name: 'Smart Car', url: 'images/smart_car.jpg'},
-                    {name: 'Fast Download', url: 'images/fast_download.jpg'}
-                ],
+                    {name: 'Fast Download', url: 'images/fast_download.jpg'},
+                    {name: 'Hot Food', url: 'images/hot_food.jpg'},
+                    {name: 'House Sale', url: 'images/house_sale.jpg'},
+                    {name: 'No Drinking', url: 'images/no_drinking.jpg'},
+                    {name: 'Anonymous Data', url: 'images/anonymous_data.jpg'},
+                    {name: 'Baby Care', url: 'images/baby_care.jpg'},
+                    {name: 'Boat Insurance', url: 'images/boat_insurance.jpg'},
+                    {name: 'Rabbit Insurance', url: 'images/rabbit_insurance.jpg'},
+                    {name: 'Secure Cloud', url: 'images/secure_cloud.jpg'}],
                 [
                     {name: 'Uniflect Album App', url: 'images/ai_uniflect_alubum.webp'},
                     {name: 'Uniflect Map App', url: 'images/ai_uniflect_map.webp'},
@@ -134,14 +157,34 @@
                     {name: 'No Gorilla', url: 'images/ai_no_gorilla.webp'},
                     {name: 'Personal Performance Data', url: 'images/ai_personal_performance.webp'},
                     {name: 'Smart Car', url: 'images/ai_smart_car.webp'},
-                    {name: 'Fast Download', url: 'images/ai_fast_download.webp'}
+                    {name: 'Fast Download', url: 'images/ai_fast_download.webp'},
+                    {name: 'Hot Food', url: 'images/ai_hot_food.webp'},
+                    {name: 'House Sale', url: 'images/ai_house_sale.webp'},
+                    {name: 'No Drinking', url: 'images/ai_no_drinking.webp'},
+                    {name: 'Anonymous Data', url: 'images/ai_anonymous_data.webp'},
+                    {name: 'Baby Care', url: 'images/ai_baby_care.webp'},
+                    {name: 'Boat Insurance', url: 'images/ai_boat_insurance.webp'},
+                    {name: 'Rabbit Insurance', url: 'images/ai_rabbit_insurance.webp'},
+                    {name: 'Secure Cloud', url: 'images/ai_secure_cloud.webp'}
                 ]
             ];
 
+            let orderedIconGroups = [];
 
-            const totalTrials = iconGroups.reduce((sum, group) => sum + group.length, 0);
+            // 追加した変数
+            let targetIconSequences = {
+                practice: [[], []], // 各アイコングループごとに保持
+                main: [[], []]
+            };
 
-            startButton.addEventListener('click', startGame);
+            let targetIconIndex = {
+                practice: [0, 0],
+                main: [0, 0]
+            };
+
+            startButton.addEventListener('click', showPracticeIntro);
+            startPracticeButton.addEventListener('click', startPractice);
+            startMainButton.addEventListener('click', startMain);
             continueButton.addEventListener('click', continueGame);
 
             function generateParticipantId() {
@@ -155,25 +198,49 @@
                 return `${year}${month}${day}${hours}${minutes}${seconds}`;
             }
 
-            function startGame() {
+            function showPracticeIntro() {
+                startScreen.style.display = 'none';
+                practiceIntroScreen.style.display = 'flex';
                 participantId = generateParticipantId();
                 trialCount = 0;
+                trialCountInGroup = 0;
                 currentIconGroupIndex = 0;
-                gameContainer.style.display = 'flex';
-                startScreen.style.display = 'none';
+                practiceMode = true;
                 order = iconGroupOrder.value;
                 if (order === '1') {
-                    iconGroups.reverse();
+                    orderedIconGroups = [iconGroups[1], iconGroups[0]];
+                } else {
+                    orderedIconGroups = [iconGroups[0], iconGroups[1]];
                 }
+            }
+
+            function startPractice() {
+                practiceIntroScreen.style.display = 'none';
+                gameContainer.style.display = 'flex';
+                practiceTrialsInGroup = 0;
+                setupGame();
+            }
+
+            function showMainIntro() {
+                gameContainer.style.display = 'none';
+                mainIntroScreen.style.display = 'flex';
+            }
+
+            function startMain() {
+                mainIntroScreen.style.display = 'none';
+                gameContainer.style.display = 'flex';
+                trialCountInGroup = 0;
+                practiceMode = false;
                 setupGame();
             }
 
             function continueGame() {
                 currentIconGroupIndex++;
-                if (currentIconGroupIndex < iconGroups.length) {
+                if (currentIconGroupIndex < orderedIconGroups.length) {
                     breakScreen.style.display = 'none';
-                    gameContainer.style.display = 'flex';
-                    setupGame();
+                    practiceIntroScreen.style.display = 'flex';
+                    practiceMode = true;
+                    practiceTrialsInGroup = 0; // 練習試行回数をリセット
                 } else {
                     alert("試行回数に達しました。ゲーム終了！");
                     startScreen.style.display = 'flex';
@@ -181,37 +248,50 @@
             }
 
             function setupGame() {
-                if (trialCount >= totalTrials) {
-                    gameContainer.style.display = 'none';
-                    alert("試行回数に達しました。ゲーム終了！");
-                    startScreen.style.display = 'flex';
-                    order = iconGroupOrder.value;
-                    if (order === '1') {
-                        iconGroups.reverse();
+                const currentIconGroup = orderedIconGroups[currentIconGroupIndex];
+                const trialsPerGroup = currentIconGroup.length; // 16
+
+                if (practiceMode && practiceTrialsInGroup >= practiceTrialsPerGroup) {
+                    showMainIntro();
+                    return;
+                }
+
+                if (!practiceMode && trialCountInGroup >= trialsPerGroup) {
+                    if (currentIconGroupIndex < orderedIconGroups.length - 1) {
+                        gameContainer.style.display = 'none';
+                        breakScreen.style.display = 'flex';
+                    } else {
+                        gameContainer.style.display = 'none';
+                        alert("試行回数に達しました。ゲーム終了！");
+                        startScreen.style.display = 'flex';
                     }
                     return;
                 }
 
-                const currentIconGroup = iconGroups[currentIconGroupIndex];
-                const trialsPerGroup = currentIconGroup.length;
-
-                if (trialCount % trialsPerGroup === 0 && trialCount > 0 && currentIconGroupIndex < iconGroups.length - 1) {
-                    gameContainer.style.display = 'none';
-                    breakScreen.style.display = 'flex';
-                    return;
+                // ターゲットアイコンシーケンスの初期化
+                if (practiceMode) {
+                    if (practiceTrialsInGroup == 0) {
+                        targetIconSequences.practice[currentIconGroupIndex] = [...currentIconGroup].sort(() => Math.random() - 0.5);
+                        targetIconIndex.practice[currentIconGroupIndex] = 0;
+                    }
+                    targetIcon = targetIconSequences.practice[currentIconGroupIndex][targetIconIndex.practice[currentIconGroupIndex]];
+                    targetIconIndex.practice[currentIconGroupIndex]++;
+                } else {
+                    if (trialCountInGroup == 0) {
+                        targetIconSequences.main[currentIconGroupIndex] = [...currentIconGroup].sort(() => Math.random() - 0.5);
+                        targetIconIndex.main[currentIconGroupIndex] = 0;
+                    }
+                    targetIcon = targetIconSequences.main[currentIconGroupIndex][targetIconIndex.main[currentIconGroupIndex]];
+                    targetIconIndex.main[currentIconGroupIndex]++;
                 }
 
-                if (trialCount % trialsPerGroup === 0) {
-                    shuffledIcons = [...currentIconGroup].sort(() => Math.random() - 0.5);
-                }
-
-                targetIcon = shuffledIcons[trialCount % trialsPerGroup];
                 instruction.textContent = `指定されたアイコン「${targetIcon.name}」を探してクリックしてください。`;
                 startTime = new Date();
                 grid.innerHTML = '';
 
+                // グリッドにアイコンを表示
                 const gridIcons = [...currentIconGroup].sort(() => Math.random() - 0.5);
-                for (let i = 0; i < 16; i++) {
+                for (let i = 0; i < 24; i++) {
                     const iconWrapper = document.createElement('div');
                     iconWrapper.className = 'icon-wrapper';
                     
@@ -235,19 +315,25 @@
                 const endTime = new Date();
                 const timeTaken = (endTime - startTime) / 1000;
                 const correct = icon.dataset.iconName === targetIcon.name;
-                //result.textContent = correct ? `正解です！時間: ${timeTaken}秒` : `不正解です！時間: ${timeTaken}秒`;
-                const resultData = {
-                    sheetNo: SHEET_NO,
-                    data: [{
-                        participantId: participantId,
-                        trial: trialCount + 1,
-                        targetIcon: targetIcon.name,
-                        iconGroup: currentIconGroupIndex + order * 2 + 1, // どのアイコン群かを記録
-                        correctness: correct ? 'correct' : 'fail',
-                        reactionTime: timeTaken
-                    }]
-                };
-                sendResultToGoogleSheets(resultData);
+
+                if (!practiceMode) {
+                    const resultData = {
+                        sheetNo: SHEET_NO,
+                        data: [{
+                            participantId: participantId,
+                            trial: trialCount + 1,
+                            targetIcon: targetIcon.name,
+                            iconGroup: parseInt(order) * 2 + currentIconGroupIndex + 1, // 1または2
+                            correctness: correct ? 'correct' : 'fail',
+                            reactionTime: timeTaken
+                        }]
+                    };
+                    sendResultToGoogleSheets(resultData);
+                    trialCountInGroup++;
+                } else {
+                    practiceTrialsInGroup++;
+                }
+
                 trialCount++;
                 setupGame();
             }
