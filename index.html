@@ -2,37 +2,87 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>Icon Search Task</title>
+    <title>アイコン探索タスク</title>
     <style>
         body {
-            display: flex;
+            width: 80%; /* 幅を80%に設定してテキストの折り返しを防止 */
+            max-width: 1200px; /* 最大幅を設定 */
+            margin: 0 auto; /* 中央寄せ */
+            min-height: 100vh;
             justify-content: center;
+            background-color: #f0f2f5;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
             align-items: center;
-            height: 100vh;
+        }
+        /* 全体のスタイル */
+        h2 {
+            color: #333;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            border: none;
+            border-radius: 5px;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        label {
+            display: block;
+            margin-top: 15px;
+            color: #555;
+            font-size: 16px;
+        }
+        input[type="text"], input[type="number"], textarea, select {
+            width: 300px;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        /* ラジオボタンのスタイル */
+        .radio-group {
+            display: flex;
+            justify-content: space-between;
+            width: 300px;
+            margin-top: 10px;
+        }
+        .radio-group label {
+            flex: 1;
+            text-align: center;
+            font-size: 14px;
             margin: 0;
-            background-color: #f4f4f4;
-            font-family: Arial, sans-serif;
-            flex-direction: column;
         }
-        #start-screen, #practice-intro-screen, #game-container, #break-screen, #main-intro-screen {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+        .radio-group input[type="radio"] {
+            margin-bottom: 5px;
         }
-        #start-screen, #practice-intro-screen, #main-intro-screen {
-            justify-content: center;
-            height: 100vh;
-        }
-        #game-container {
+        /* スクリーンのスタイル */
+        #consent-screen, #start-screen, #practice-intro-screen, #game-container, #break-screen, #main-intro-screen, #questionnaire-screen, #ending-screen {
             display: none;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            max-width: 800px;
+        }
+        #consent-screen, #start-screen, #practice-intro-screen, #main-intro-screen, #ending-screen {
+            justify-content: center;
+            min-height: 100vh;
+        }
+        #game-container, #break-screen, #questionnaire-screen {
             justify-content: center;
             align-items: center;
         }
-        #break-screen {
-            display: none;
-            justify-content: center;
-            align-items: center;
-        }
+        /* グリッドスタイル */
         #grid {
             display: grid;
             grid-template-columns: repeat(6, 120px);
@@ -63,22 +113,101 @@
             margin: 10px;
             font-size: 16px;
             color: #333;
+            text-align: center;
+        }
+
+        /* 同意書フォームのスタイル */
+        #consent-screen form {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        /* アンケートフォームのスタイル */
+        #questionnaire-screen form {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        /* 送信ボタンを中央に配置 */
+        #consent-screen form button,
+        #questionnaire-screen form button {
+            align-self: center;
+        }
+
+        /* 自由記述のテキストエリアのスタイル */
+        #questionnaire-screen textarea {
+            width: 500px;  /* 横幅を500pxに設定 */
+            height: 150px; /* 高さを150pxに設定 */
+            margin-top: 10px;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        /* 終了画面のスタイル */
+        #ending-screen h2 {
+            color: #333;
+        }
+
+        /* 同意書の内容のスタイル */
+        .consent-content {
+            max-width: 800px;
+            margin-bottom: 20px;
+            line-height: 1.6;
+            font-size: 16px;
+            color: #555;
         }
     </style>
 </head>
 <body>
+    <!-- 実験同意書ページ -->
+    <div id="consent-screen" style="display: flex;">
+        <!-- <h2>実験同意書</h2> --> 
+        <div class="consent-content">
+            <p>この度は本実験へのご協力ありがとうございます。<br>以下の内容をご確認いただき、同意いただける場合は、必要事項をご記入の上「同意して実験開始」を選択し実験を開始してください。</p>
+            <h3>1. 実験の目的</h3>
+            <p>アイコンの推測容易性の評価</p>
+            <h3>2. 実験の概要</h3>
+            <p>パソコン画面上で、提示されたアイコン名に対応するアイコンをできるだけ早く正確にクリックしていただきます。タスク後に、アイコンの分かりやすさ、複雑さ、美的好ましさに関する簡単な質問にお答えいただきます。最後に、アイコンの探索方法について自由記述でお伺いします。</p>
+            <h3>3. 所要時間</h3>
+            <p>約30分程度です。</p>
+            <h3>4. 参加にあたっての注意事項</h3>
+            <p>参加は完全に任意であり、途中で中止することも可能です。その場合でも不利益を被ることはありません。<br>
+            環境：安定したインターネット接続とPCをご用意ください。タスクに集中できる環境で実験を行ってください。</p>
+            <h3>5. 個人情報の取り扱い</h3>
+            <p>収集したデータは匿名化し、研究目的以外には使用いたしません。</p>
+            <h3>6. お問い合わせ先</h3>
+            <p>担当者：明治大学大学院 渡邊研究室 赤塚翔太<br>
+            メールアドレス：cs232002@meiji.ac.jp</p>
+        </div>
+        <form id="consent-form">
+            <label>氏名: <input type="text" id="participant-name" required></label>
+            <label>年齢: <input type="number" id="participant-age" min="0" required></label>
+            <label>性別:
+                <select id="participant-gender" required>
+                    <option value="">選択してください</option>
+                    <option value="男性">男性</option>
+                    <option value="女性">女性</option>
+                    <option value="その他">その他</option>
+                    <option value="回答しない">回答しない</option>
+                </select>
+            </label>
+            <!--- <label><input type="checkbox" id="consent-checkbox" required> 私は実験に同意します。</label> --->
+            <button type="button" id="consent-button">同意して実験開始</button>
+        </form>
+    </div>
+    <!-- 開始画面 -->
     <div id="start-screen">
-        <select id="icon-group-order">
-            <option value="0">アイコン群1 → アイコン群2</option>
-            <option value="1">アイコン群2 → アイコン群1</option>
-        </select>
         <button id="start-button">ゲーム開始</button>
     </div>
-    <div id="practice-intro-screen" style="display: none;">
+    <div id="practice-intro-screen">
         <p>これから練習試行を行います。準備ができたら「練習開始」を押してください。</p>
         <button id="start-practice-button">練習開始</button>
     </div>
-    <div id="main-intro-screen" style="display: none;">
+    <div id="main-intro-screen">
         <p>これから本番を行います。準備ができたら「本番開始」を押してください。</p>
         <button id="start-main-button">本番開始</button>
     </div>
@@ -91,10 +220,60 @@
         <p>休憩時間です。準備ができたら「続ける」を押してください。</p>
         <button id="continue-button">続ける</button>
     </div>
+    <!-- アンケート画面 -->
+    <div id="questionnaire-screen">
+        <h2>アンケートにお答えください</h2>
+        <form id="questionnaire-form">
+            <label>これらのアイコンはどのくらい分かりやすいですか？</label>
+            <div class="radio-group" id="understandability">
+                <label><input type="radio" name="understandability" value="1" required>1</label>
+                <label><input type="radio" name="understandability" value="2">2</label>
+                <label><input type="radio" name="understandability" value="3">3</label>
+                <label><input type="radio" name="understandability" value="4">4</label>
+                <label><input type="radio" name="understandability" value="5">5</label>
+                <label><input type="radio" name="understandability" value="6">6</label>
+                <label><input type="radio" name="understandability" value="7">7</label>
+            </div>
+            <label>これらのアイコンはどのくらい複雑ですか？</label>
+            <div class="radio-group" id="complexity">
+                <label><input type="radio" name="complexity" value="1" required>1</label>
+                <label><input type="radio" name="complexity" value="2">2</label>
+                <label><input type="radio" name="complexity" value="3">3</label>
+                <label><input type="radio" name="complexity" value="4">4</label>
+                <label><input type="radio" name="complexity" value="5">5</label>
+                <label><input type="radio" name="complexity" value="6">6</label>
+                <label><input type="radio" name="complexity" value="7">7</label>
+            </div>
+            <label>これらのアイコンはどのくらい美的に好ましいですか？</label>
+            <div class="radio-group" id="aesthetic">
+                <label><input type="radio" name="aesthetic" value="1" required>1</label>
+                <label><input type="radio" name="aesthetic" value="2">2</label>
+                <label><input type="radio" name="aesthetic" value="3">3</label>
+                <label><input type="radio" name="aesthetic" value="4">4</label>
+                <label><input type="radio" name="aesthetic" value="5">5</label>
+                <label><input type="radio" name="aesthetic" value="6">6</label>
+                <label><input type="radio" name="aesthetic" value="7">7</label>
+            </div>
+            <label>タスクを振り返って、どのようにアイコンを探索しましたか？（自由記述）</label>
+            <textarea id="strategy" required></textarea>
+            <button type="button" id="submit-questionnaire-button">送信</button>
+        </form>
+    </div>
+    <!-- 終了画面 -->
+    <div id="ending-screen">
+        <h2>実験終了です。ブラウザーを閉じてください。</h2>
+    </div>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const END_POINT = 'https://script.google.com/macros/s/AKfycbxNPQVHbFdCRZXFiyf3DHlnTrrHzJsjv0r9IWWlRDcYh9XBiUpKpXxpcW1n4AowKN8g/exec'; // WebアプリのURLを設定
+            const END_POINT = 'https://script.google.com/macros/s/AKfycbxYfqsumIrP6FI2SDvibRoVHecT2UD8OkZ3xmtOASvkvUIm-JmOmTXjJX_lphWSTC5EBg/exec'; // WebアプリのURLを設定
             const SHEET_NO = 1;
+            const consentScreen = document.getElementById('consent-screen');
+            const participantNameInput = document.getElementById('participant-name');
+            const participantAgeInput = document.getElementById('participant-age');
+            const participantGenderSelect = document.getElementById('participant-gender');
+            const consentCheckbox = document.getElementById('consent-checkbox');
+            const consentButton = document.getElementById('consent-button');
+
             const startButton = document.getElementById('start-button');
             const startPracticeButton = document.getElementById('start-practice-button');
             const startMainButton = document.getElementById('start-main-button');
@@ -107,11 +286,21 @@
             const grid = document.getElementById('grid');
             const result = document.getElementById('result');
             const instruction = document.getElementById('instruction');
-            const iconGroupOrder = document.getElementById('icon-group-order');
+            // アンケート画面の要素を取得
+            const questionnaireScreen = document.getElementById('questionnaire-screen');
+            const submitQuestionnaireButton = document.getElementById('submit-questionnaire-button');
+            const understandabilityInputs = document.getElementsByName('understandability');
+            const complexityInputs = document.getElementsByName('complexity');
+            const aestheticInputs = document.getElementsByName('aesthetic');
+            const strategyInput = document.getElementById('strategy');
+
+            const endingScreen = document.getElementById('ending-screen');
+
             let trialCount = 0;
             let trialCountInGroup = 0;
             let currentIconGroupIndex = 0;
             let startTime, targetIcon, participantId, order;
+            let participantNumber;
             let practiceMode = true;
             const practiceTrialsPerGroup = 24;
             let practiceTrialsInGroup = 0;
@@ -140,7 +329,8 @@
                     {name: 'Baby Care', url: 'images/baby_care.jpg'},
                     {name: 'Boat Insurance', url: 'images/boat_insurance.jpg'},
                     {name: 'Rabbit Insurance', url: 'images/rabbit_insurance.jpg'},
-                    {name: 'Secure Cloud', url: 'images/secure_cloud.jpg'}],
+                    {name: 'Secure Cloud', url: 'images/secure_cloud.jpg'}
+                ],
                 [
                     {name: 'Uniflect Album App', url: 'images/ai_uniflect_alubum.webp'},
                     {name: 'Uniflect Map App', url: 'images/ai_uniflect_map.webp'},
@@ -182,36 +372,84 @@
                 main: [0, 0]
             };
 
+            consentButton.addEventListener('click', submitConsent);
             startButton.addEventListener('click', showPracticeIntro);
             startPracticeButton.addEventListener('click', startPractice);
             startMainButton.addEventListener('click', startMain);
             continueButton.addEventListener('click', continueGame);
+            submitQuestionnaireButton.addEventListener('click', submitQuestionnaire);
 
-            function generateParticipantId() {
-                const now = new Date();
-                const year = now.getFullYear();
-                const month = String(now.getMonth() + 1).padStart(2, '0');
-                const day = String(now.getDate()).padStart(2, '0');
-                const hours = String(now.getHours()).padStart(2, '0');
-                const minutes = String(now.getMinutes()).padStart(2, '0');
-                const seconds = String(now.getSeconds()).padStart(2, '0');
-                return `${year}${month}${day}${hours}${minutes}${seconds}`;
+            function generateParticipantId(number) {
+                return `P${String(number).padStart(4, '0')}`;
+            }
+
+            function submitConsent() {
+                const name = participantNameInput.value.trim();
+                const age = participantAgeInput.value;
+                const gender = participantGenderSelect.value;
+                //const consentGiven = consentCheckbox.checked;
+                
+                
+                /** if (!name || !age || !gender || !consentGiven) {
+                    alert('全ての項目に入力・同意してください。');
+                    return;
+                } **/
+
+                if (!name || !age || !gender) {
+                    alert('全ての項目に入力・同意してください。');
+                    return;
+                }
+
+                const consentData = {
+                    sheetNo: 3, // 同意書データを保存するシート番号
+                    data: [{
+                        name: name,
+                        age: age,
+                        gender: gender,
+                        //consent: consentGiven ? 'Yes' : 'No'
+                    }]
+                };
+
+                // サーバーに同意書データを送信し、参加者番号を取得
+                fetch(END_POINT, {
+                    method: 'POST',
+                    body: JSON.stringify(consentData),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.participantNumber) {
+                        participantNumber = data.participantNumber;
+                        participantId = generateParticipantId(participantNumber);
+                        assignIconGroupOrder(participantNumber);
+                        consentScreen.style.display = 'none';
+                        startScreen.style.display = 'flex';
+                    } else {
+                        alert('参加者番号の取得に失敗しました。');
+                    }
+                })
+                .catch(error => console.error('Error!', error.message));
+            }
+
+            function assignIconGroupOrder(participantNumber) {
+                if (participantNumber % 2 === 0) {
+                    // 偶数番目の参加者：アイコン群1→2
+                    orderedIconGroups = [iconGroups[0], iconGroups[1]];
+                    order = 0;
+                } else {
+                    // 奇数番目の参加者：アイコン群2→1
+                    orderedIconGroups = [iconGroups[1], iconGroups[0]];
+                    order = 1;
+                }
             }
 
             function showPracticeIntro() {
                 startScreen.style.display = 'none';
                 practiceIntroScreen.style.display = 'flex';
-                participantId = generateParticipantId();
                 trialCount = 0;
                 trialCountInGroup = 0;
                 currentIconGroupIndex = 0;
                 practiceMode = true;
-                order = iconGroupOrder.value;
-                if (order === '1') {
-                    orderedIconGroups = [iconGroups[1], iconGroups[0]];
-                } else {
-                    orderedIconGroups = [iconGroups[0], iconGroups[1]];
-                }
+                practiceTrialsInGroup = 0;
             }
 
             function startPractice() {
@@ -235,21 +473,15 @@
             }
 
             function continueGame() {
-                currentIconGroupIndex++;
-                if (currentIconGroupIndex < orderedIconGroups.length) {
-                    breakScreen.style.display = 'none';
-                    practiceIntroScreen.style.display = 'flex';
-                    practiceMode = true;
-                    practiceTrialsInGroup = 0; // 練習試行回数をリセット
-                } else {
-                    alert("試行回数に達しました。ゲーム終了！");
-                    startScreen.style.display = 'flex';
-                }
+                breakScreen.style.display = 'none';
+                practiceIntroScreen.style.display = 'flex';
+                practiceMode = true;
+                practiceTrialsInGroup = 0; // 練習試行回数をリセット
             }
 
             function setupGame() {
                 const currentIconGroup = orderedIconGroups[currentIconGroupIndex];
-                const trialsPerGroup = currentIconGroup.length; // 16
+                const trialsPerGroup = currentIconGroup.length; // 24
 
                 if (practiceMode && practiceTrialsInGroup >= practiceTrialsPerGroup) {
                     showMainIntro();
@@ -257,14 +489,7 @@
                 }
 
                 if (!practiceMode && trialCountInGroup >= trialsPerGroup) {
-                    if (currentIconGroupIndex < orderedIconGroups.length - 1) {
-                        gameContainer.style.display = 'none';
-                        breakScreen.style.display = 'flex';
-                    } else {
-                        gameContainer.style.display = 'none';
-                        alert("試行回数に達しました。ゲーム終了！");
-                        startScreen.style.display = 'flex';
-                    }
+                    showQuestionnaire();
                     return;
                 }
 
@@ -294,7 +519,7 @@
                 for (let i = 0; i < 24; i++) {
                     const iconWrapper = document.createElement('div');
                     iconWrapper.className = 'icon-wrapper';
-                    
+
                     const icon = document.createElement('div');
                     icon.className = 'icon';
                     icon.style.backgroundImage = `url('${gridIcons[i % gridIcons.length].url}')`;
@@ -348,6 +573,71 @@
                     console.log('Success!', data);
                 })
                 .catch(error => console.error('Error!', error.message));
+            }
+
+            function showQuestionnaire() {
+                gameContainer.style.display = 'none';
+                questionnaireScreen.style.display = 'flex';
+            }
+
+            function submitQuestionnaire() {
+                const understandability = getRadioValue(understandabilityInputs);
+                const complexity = getRadioValue(complexityInputs);
+                const aesthetic = getRadioValue(aestheticInputs);
+                const strategy = strategyInput.value.trim();
+
+                if (!understandability || !complexity || !aesthetic || !strategy) {
+                    alert('全ての質問にお答えください。');
+                    return;
+                }
+
+                const questionnaireData = {
+                    sheetNo: 2, // 別のシート番号を指定
+                    data: [{
+                        participantId: participantId,
+                        iconGroup: parseInt(order) * 2 + currentIconGroupIndex + 1, // 1または2
+                        understandability: understandability,
+                        complexity: complexity,
+                        aesthetic: aesthetic,
+                        strategy: strategy
+                    }]
+                };
+
+                sendResultToGoogleSheets(questionnaireData);
+
+                // 入力欄をクリア
+                clearRadioSelection(understandabilityInputs);
+                clearRadioSelection(complexityInputs);
+                clearRadioSelection(aestheticInputs);
+                strategyInput.value = '';
+
+                questionnaireScreen.style.display = 'none';
+
+                // 次の条件に進むか、終了する
+                if (currentIconGroupIndex < orderedIconGroups.length - 1) {
+                    currentIconGroupIndex++;
+                    practiceIntroScreen.style.display = 'flex';
+                    practiceMode = true;
+                    practiceTrialsInGroup = 0; // 練習試行回数をリセット
+                } else {
+                    // 実験終了画面を表示
+                    endingScreen.style.display = 'flex';
+                }
+            }
+
+            function getRadioValue(radioNodeList) {
+                for (let i = 0; i < radioNodeList.length; i++) {
+                    if (radioNodeList[i].checked) {
+                        return radioNodeList[i].value;
+                    }
+                }
+                return null;
+            }
+
+            function clearRadioSelection(radioNodeList) {
+                for (let i = 0; i < radioNodeList.length; i++) {
+                    radioNodeList[i].checked = false;
+                }
             }
         });
     </script>
